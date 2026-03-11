@@ -1,0 +1,24 @@
+# Environment variables (contains secrets)
+.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# WhatsApp Web JS cache & session
+.wwebjs_cache/
+.wwebjs_auth/
+*.session
+data/session/
+
+# OS
+.DS_Store
+Thumbs.db

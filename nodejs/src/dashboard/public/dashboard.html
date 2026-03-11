@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header .controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(40, 167, 69, 0.2);
+            color: #28a745;
+        }
+
+        .status-paused {
+            background: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #25D366;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card h3 {
+            margin-bottom: 1rem;
+            color: #333;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .btn-primary {
+            background: #25D366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1ea856;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .actions-grid {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .recent-messages,
+        .system-logs {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .message-item,
+        .log-entry {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 0.875rem;
+        }
+
+        .message-item:last-child,
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .message-incoming {
+            background: #f8f9fa;
+        }
+
+        .message-outgoing {
+            background: #e3f2fd;
+        }
+
+        .log-error {
+            color: #dc3545;
+        }
+
+        .log-warning {
+            color: #ffc107;
+        }
+
+        .log-info {
+            color: #17a2b8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            z-index: 1000;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-success {
+            background: #28a745;
+        }
+
+        .toast-error {
+            background: #dc3545;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .toggle-container:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .toggle-desc {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked+.toggle-slider {
+            background: #25D366;
+        }
+
+        .toggle-switch input:checked+.toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #f1f3f4;
+            font-size: 0.875rem;
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-item .contact-info {
+            flex: 1;
+        }
+
+        .contact-item .contact-name {
+            font-weight: 500;
+        }
+
+        .contact-item .contact-id {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .pending-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .pending-item:last-child {
+            border-bottom: none;
+        }
+
+        .pending-from {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .pending-msg {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .pending-ai {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            background: #e3f2fd;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border-left: 3px solid #25D366;
+        }
+
+        .pending-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .pending-time {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .scrollable {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.25rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🤖 WhatsApp Bot Dashboard</h1>
+        <div class="controls">
+            <span id="bot-status" class="status-indicator status-active">● ACTIVE</span>
+            <button class="btn btn-secondary" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="messages-today">--</div>
+                <div class="stat-label">Messages Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="active-users">--</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="error-rate">--%</div>
+                <div class="stat-label">Error Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="uptime">--</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h3>🤖 Instruct Agent</h3>
+                <div class="form-group">
+                    <label>Phone Number:</label>
+                    <input type="text" id="phone-number" placeholder="e.g. 201080929617 (country code + number, no +)"
+                        pattern="[0-9+]+" title="Enter phone number with country code">
+                </div>
+                <div class="form-group">
+                    <label>Instruction for Agent:</label>
+                    <textarea id="message-text" rows="4"
+                        placeholder="Tell the agent what to say, e.g. 'Greet this person and ask how their day is going' or 'Tell them their order #123 is ready for pickup'"
+                        maxlength="2000"></textarea>
+                    <small style="color: #6c757d;">Characters: <span id="char-count">0</span>/2000</small>
+                </div>
+                <div id="agent-preview" style="display:none; margin-bottom: 1rem;">
+                    <label style="font-weight: 500; color: #333;">Agent's Generated Message:</label>
+                    <div id="agent-preview-text"
+                        style="padding: 0.75rem; background: #e3f2fd; border-radius: 6px; border-left: 3px solid #25D366; margin-top: 0.5rem; font-size: 0.875rem; white-space: pre-wrap;">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                        <button class="btn btn-primary" onclick="confirmSendMessage()" style="flex: 1;">Approve &
+                            Send</button>
+                        <button class="btn btn-danger" onclick="cancelSendMessage()" style="flex: 1;">Cancel</button>
+                    </div>
+                </div>
+                <button id="instruct-btn" class="btn btn-primary" onclick="sendMessage()" style="width: 100%;">Generate
+                    & Preview</button>
+            </div>
+
+            <div class="card">
+                <h3>⚡ Quick Actions</h3>
+                <div class="actions-grid">
+                    <button class="btn btn-danger" onclick="pauseBot()">⏸️ Pause Bot</button>
+                    <button class="btn btn-primary" onclick="resumeBot()">▶️ Resume Bot</button>
+                    <button class="btn btn-secondary" onclick="refreshStats()">🔄 Refresh</button>
+                    <button class="btn btn-secondary" onclick="showAgentStatus()">🤖 Agents</button>
+                </div>
+
+                <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">System Status:</h4>
+                <div style="font-size: 0.875rem; color: #666;">
+                    <div>Connected Clients: <span id="connected-clients">--</span></div>
+                    <div>Memory Usage: <span id="memory-usage">--</span></div>
+                    <div>Last Update: <span id="last-update">--</span></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>⚙️ Bot Settings</h3>
+                <div class="toggle-container">
+                    <div>
+                        <div class="toggle-label">Auto-Reply Mode</div>
+                        <div class="toggle-desc">When OFF, messages go to pending queue for your approval</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-auto-reply" onchange="toggleAutoReply(this.checked)" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-container">
+                    <div>
+                        <div class="toggle-label">Allowed Contacts Only</div>
+                        <div class="toggle-desc">When ON, bot only responds to contacts in the allowed list</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-allowed-only" onchange="toggleAllowedOnly(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-container">
+                    <div>
+                        <div class="toggle-label">Voice Replies 🎤</div>
+                        <div class="toggle-desc">When ON, bot replies with voice messages instead of text</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-voice-replies" onchange="toggleVoiceReplies(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div style="margin-top: 0.75rem; font-size: 0.875rem; color: #666;">
+                    Pending messages: <span id="pending-count" class="badge badge-warning">0</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📋 Allowed Contacts</h3>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <input type="text" id="new-contact-number" placeholder="Phone number (e.g. 201080929617)"
+                        style="flex: 1; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.875rem;">
+                    <input type="text" id="new-contact-name" placeholder="Name"
+                        style="width: 120px; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.875rem;">
+                    <button class="btn btn-primary btn-sm" onclick="addAllowedContact()">Add</button>
+                </div>
+                <div id="allowed-contacts-list" class="scrollable">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card full-width">
+                <h3>⏳ Pending Messages <span id="pending-badge" class="badge badge-warning"
+                        style="display:none;">0</span></h3>
+                <div id="pending-messages-list" class="scrollable">
+                    <div style="text-align: center; color: #666; padding: 2rem;">No pending messages</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💬 Recent Messages</h3>
+                <div id="recent-messages" class="recent-messages">
+                    <div class="loading">Loading recent messages...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📋 System Logs</h3>
+                <div style="margin-bottom: 1rem;">
+                    <select id="log-level" onchange="loadSystemLogs()"
+                        style="padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px;">
+                        <option value="">All Levels</option>
+                        <option value="error">Errors Only</option>
+                        <option value="warning">Warnings</option>
+                        <option value="info">Info</option>
+                    </select>
+                </div>
+                <div id="system-logs" class="system-logs">
+                    <div class="loading">Loading system logs...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let isConnected = false;
+
+        // Socket event handlers
+        socket.on('connect', () => {
+            isConnected = true;
+            socket.emit('subscribe-stats');
+            socket.emit('subscribe-logs');
+        });
+
+        socket.on('disconnect', () => {
+            isConnected = false;
+            showToast('Connection lost. Attempting to reconnect...', 'error');
+        });
+
+        socket.on('stats-update', updateStats);
+        socket.on('new-message', addNewMessage);
+        socket.on('message-sent', onMessageSent);
+        socket.on('system-status', updateSystemStatus);
+
+        // WebSocket listeners for new features
+        socket.on('pending-message', () => { loadPendingMessages(); loadBotSettings(); });
+        socket.on('pending-message-resolved', () => { loadPendingMessages(); loadBotSettings(); });
+        socket.on('settings-updated', (data) => { loadBotSettings(); });
+        socket.on('allowed-contacts-updated', () => { loadAllowedContacts(); });
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshStats();
+            loadRecentMessages();
+            loadSystemLogs();
+            loadBotSettings();
+            loadAllowedContacts();
+            loadPendingMessages();
+
+            // Character counter
+            document.getElementById('message-text').addEventListener('input', updateCharCount);
+        });
+
+        let pendingAgentMessage = null; // stores { contactId, generatedMessage }
+
+        async function sendMessage() {
+            const phoneNumber = document.getElementById('phone-number').value.trim();
+            const instruction = document.getElementById('message-text').value.trim();
+
+            if (!phoneNumber || !instruction) {
+                showToast('Please enter both phone number and instruction', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('instruct-btn');
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+
+            try {
+                const response = await fetchAPI('/api/generate-message', 'POST', {
+                    contactId: phoneNumber,
+                    instruction: instruction
+                });
+
+                if (response.success) {
+                    pendingAgentMessage = {
+                        contactId: response.contactId,
+                        generatedMessage: response.generatedMessage
+                    };
+                    document.getElementById('agent-preview-text').textContent = response.generatedMessage;
+                    document.getElementById('agent-preview').style.display = 'block';
+                    btn.style.display = 'none';
+                } else {
+                    showToast('Error: ' + (response.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showToast('Network error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate & Preview';
+            }
+        }
+
+        async function confirmSendMessage() {
+            if (!pendingAgentMessage) return;
+
+            try {
+                const response = await fetchAPI('/api/send-message', 'POST', {
+                    contactId: pendingAgentMessage.contactId,
+                    message: pendingAgentMessage.generatedMessage
+                });
+
+                if (response.success) {
+                    showToast('Message sent successfully!', 'success');
+                    document.getElementById('message-text').value = '';
+                    document.getElementById('phone-number').value = '';
+                    updateCharCount();
+                    loadRecentMessages();
+                } else {
+                    showToast('Error: ' + (response.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showToast('Network error: ' + error.message, 'error');
+            } finally {
+                cancelSendMessage();
+            }
+        }
+
+        function cancelSendMessage() {
+            pendingAgentMessage = null;
+            document.getElementById('agent-preview').style.display = 'none';
+            document.getElementById('instruct-btn').style.display = 'block';
+        }
+
+        async function refreshStats() {
+            try {
+                const response = await fetchAPI('/api/stats');
+                if (response.success) {
+                    updateStats(response.data);
+                }
+            } catch (error) {
+                console.error('Stats refresh error:', error);
+            }
+        }
+
+        function updateStats(stats) {
+            document.getElementById('messages-today').textContent = stats.messages_today || 0;
+            document.getElementById('active-users').textContent = stats.active_users_today || 0;
+            document.getElementById('error-rate').textContent = (stats.error_rate || 0) + '%';
+            document.getElementById('connected-clients').textContent = stats.connectedClients || 0;
+
+            // Format uptime
+            const uptime = stats.uptime || 0;
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            document.getElementById('uptime').textContent = `${hours}h ${minutes}m`;
+
+            // Memory usage
+            if (stats.memory) {
+                document.getElementById('memory-usage').textContent = `${stats.memory.used}MB`;
+            }
+
+            // Bot status
+            updateBotStatus(stats.botStatus);
+
+            // Last update
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+
+        function updateBotStatus(status) {
+            const statusEl = document.getElementById('bot-status');
+            if (status === 'paused') {
+                statusEl.textContent = '⏸️ PAUSED';
+                statusEl.className = 'status-indicator status-paused';
+            } else {
+                statusEl.textContent = '▶️ ACTIVE';
+                statusEl.className = 'status-indicator status-active';
+            }
+        }
+
+        async function loadRecentMessages() {
+            try {
+                const response = await fetchAPI('/api/conversations?limit=10');
+                if (response.success) {
+                    const messagesDiv = document.getElementById('recent-messages');
+                    if (response.data.length === 0) {
+                        messagesDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No recent messages</div>';
+                        return;
+                    }
+
+                    messagesDiv.innerHTML = response.data.map(msg => `
+                        <div class="message-item ${msg.direction === 'incoming' ? 'message-incoming' : 'message-outgoing'}">
+                            <div style="font-weight: 500;">${msg.contact_name || msg.contact_id}</div>
+                            <div style="margin: 0.25rem 0;">${truncateText(msg.last_message, 100)}</div>
+                            <div style="font-size: 0.75rem; color: #6c757d;">${formatTime(msg.last_activity)}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('recent-messages').innerHTML = '<div class="loading">Error loading messages</div>';
+            }
+        }
+
+        async function loadSystemLogs() {
+            const level = document.getElementById('log-level').value;
+            try {
+                const response = await fetchAPI(`/api/system-logs?limit=20${level ? `&level=${level}` : ''}`);
+                if (response.success) {
+                    const logsDiv = document.getElementById('system-logs');
+                    if (response.data.length === 0) {
+                        logsDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No logs found</div>';
+                        return;
+                    }
+
+                    logsDiv.innerHTML = response.data.map(log => `
+                        <div class="log-entry log-${log.level}">
+                            <div>[${formatTime(log.timestamp)}] <strong>${log.level.toUpperCase()}</strong>: ${log.message}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('system-logs').innerHTML = '<div class="loading">Error loading logs</div>';
+            }
+        }
+
+        async function pauseBot() {
+            try {
+                const response = await fetchAPI('/api/bot/pause', 'POST');
+                if (response.success) {
+                    showToast('Bot paused successfully', 'success');
+                    updateBotStatus('paused');
+                } else {
+                    showToast('Failed to pause bot: ' + response.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error pausing bot: ' + error.message, 'error');
+            }
+        }
+
+        async function resumeBot() {
+            try {
+                const response = await fetchAPI('/api/bot/resume', 'POST');
+                if (response.success) {
+                    showToast('Bot resumed successfully', 'success');
+                    updateBotStatus('active');
+                } else {
+                    showToast('Failed to resume bot: ' + response.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error resuming bot: ' + error.message, 'error');
+            }
+        }
+
+        async function showAgentStatus() {
+            try {
+                const response = await fetchAPI('/api/agents/status');
+                if (response.success) {
+                    const agents = response.data;
+                    const status = Object.entries(agents).map(([name, enabled]) =>
+                        `${name}: ${enabled ? '✅' : '❌'}`
+                    ).join('\n');
+
+                    alert(`Agent Status:\n\n${status}`);
+                }
+            } catch (error) {
+                showToast('Error getting agent status', 'error');
+            }
+        }
+
+        // =====================================================
+        // BOT SETTINGS
+        // =====================================================
+        async function loadBotSettings() {
+            try {
+                const response = await fetchAPI('/api/bot-settings');
+                if (response.success) {
+                    document.getElementById('toggle-auto-reply').checked = response.data.autoReply;
+                    document.getElementById('toggle-allowed-only').checked = response.data.allowedContactsOnly;
+                    document.getElementById('toggle-voice-replies').checked = response.data.voiceReplies;
+                    document.getElementById('pending-count').textContent = response.data.pendingCount;
+                }
+            } catch (error) {
+                console.error('Error loading bot settings:', error);
+            }
+        }
+
+        async function toggleAutoReply(enabled) {
+            try {
+                const response = await fetchAPI('/api/bot-settings/auto-reply', 'POST', { enabled });
+                if (response.success) {
+                    showToast(enabled ? 'Auto-reply enabled' : 'Auto-reply disabled (manual approval mode)', 'success');
+                } else {
+                    showToast('Failed to update setting', 'error');
+                    document.getElementById('toggle-auto-reply').checked = !enabled;
+                }
+            } catch (error) {
+                showToast('Error updating setting', 'error');
+                document.getElementById('toggle-auto-reply').checked = !enabled;
+            }
+        }
+
+        async function toggleAllowedOnly(enabled) {
+            try {
+                const response = await fetchAPI('/api/bot-settings/allowed-contacts-only', 'POST', { enabled });
+                if (response.success) {
+                    showToast(enabled ? 'Allowed contacts only mode ON' : 'Allowed contacts only mode OFF', 'success');
+                } else {
+                    showToast('Failed to update setting', 'error');
+                    document.getElementById('toggle-allowed-only').checked = !enabled;
+                }
+            } catch (error) {
+                showToast('Error updating setting', 'error');
+                document.getElementById('toggle-allowed-only').checked = !enabled;
+            }
+        }
+
+        async function toggleVoiceReplies(enabled) {
+            try {
+                const response = await fetchAPI('/api/bot-settings/voice-replies', 'POST', { enabled });
+                if (response.success) {
+                    showToast(enabled ? '🎤 Voice replies enabled' : 'Voice replies disabled (text mode)', 'success');
+                } else {
+                    showToast('Failed to update setting', 'error');
+                    document.getElementById('toggle-voice-replies').checked = !enabled;
+                }
+            } catch (error) {
+                showToast('Error updating setting', 'error');
+                document.getElementById('toggle-voice-replies').checked = !enabled;
+            }
+        }
+
+        // =====================================================
+        // ALLOWED CONTACTS
+        // =====================================================
+        async function loadAllowedContacts() {
+            try {
+                const response = await fetchAPI('/api/allowed-contacts');
+                if (response.success) {
+                    const listDiv = document.getElementById('allowed-contacts-list');
+                    if (response.data.length === 0) {
+                        listDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem; font-size: 0.875rem;">No allowed contacts yet. Add numbers above.</div>';
+                        return;
+                    }
+                    listDiv.innerHTML = response.data.map(c => `
+                        <div class="contact-item">
+                            <div class="contact-info">
+                                <div class="contact-name">${c.name || 'Unknown'}</div>
+                                <div class="contact-id">${c.contact_id}</div>
+                            </div>
+                            <button class="btn btn-danger btn-sm" onclick="removeAllowedContact('${c.contact_id}')">Remove</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('allowed-contacts-list').innerHTML = '<div class="loading">Error loading contacts</div>';
+            }
+        }
+
+        async function addAllowedContact() {
+            const number = document.getElementById('new-contact-number').value.trim();
+            const name = document.getElementById('new-contact-name').value.trim();
+            if (!number) {
+                showToast('Please enter a phone number', 'error');
+                return;
+            }
+            try {
+                const response = await fetchAPI('/api/allowed-contacts', 'POST', { contactId: number, name });
+                if (response.success) {
+                    document.getElementById('new-contact-number').value = '';
+                    document.getElementById('new-contact-name').value = '';
+                    showToast('Contact added to allowed list', 'success');
+                    loadAllowedContacts();
+                } else {
+                    showToast('Error: ' + response.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error adding contact', 'error');
+            }
+        }
+
+        async function removeAllowedContact(contactId) {
+            if (!confirm(`Remove ${contactId} from allowed contacts?`)) return;
+            try {
+                const response = await fetchAPI(`/api/allowed-contacts/${encodeURIComponent(contactId)}`, 'DELETE');
+                if (response.success) {
+                    showToast('Contact removed', 'success');
+                    loadAllowedContacts();
+                } else {
+                    showToast('Error: ' + response.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error removing contact', 'error');
+            }
+        }
+
+        // =====================================================
+        // PENDING MESSAGES
+        // =====================================================
+        async function loadPendingMessages() {
+            try {
+                const response = await fetchAPI('/api/pending-messages');
+                if (response.success) {
+                    const listDiv = document.getElementById('pending-messages-list');
+                    const badge = document.getElementById('pending-badge');
+                    const count = response.data.length;
+
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+
+                    if (count === 0) {
+                        listDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No pending messages</div>';
+                        return;
+                    }
+                    listDiv.innerHTML = response.data.map(msg => `
+                        <div class="pending-item" id="pending-${msg.id}">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="pending-from">${msg.contact_name || msg.contact_id}</span>
+                                <span class="pending-time">${formatTime(msg.created_at)}</span>
+                            </div>
+                            <div class="pending-msg"><strong>Message:</strong> ${truncateText(msg.message_text, 200)}</div>
+                            <div class="pending-ai"><strong>AI Response:</strong> ${truncateText(msg.ai_response, 300)}</div>
+                            <div class="pending-actions">
+                                <button class="btn btn-primary btn-sm" onclick="approvePending(${msg.id})">Approve & Send</button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectPending(${msg.id})">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                document.getElementById('pending-messages-list').innerHTML = '<div class="loading">Error loading pending messages</div>';
+            }
+        }
+
+        async function approvePending(id) {
+            try {
+                const response = await fetchAPI(`/api/pending-messages/${id}/approve`, 'POST');
+                if (response.success) {
+                    showToast('Message approved and sent!', 'success');
+                    loadPendingMessages();
+                    loadBotSettings();
+                } else {
+                    showToast('Error: ' + response.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error approving message', 'error');
+            }
+        }
+
+        async function rejectPending(id) {
+            try {
+                const response = await fetchAPI(`/api/pending-messages/${id}/reject`, 'POST');
+                if (response.success) {
+                    showToast('Message rejected', 'success');
+                    loadPendingMessages();
+                    loadBotSettings();
+                } else {
+                    showToast('Error: ' + response.error, 'error');
+                }
+            } catch (error) {
+                showToast('Error rejecting message', 'error');
+            }
+        }
+
+        function addNewMessage(data) {
+            // Add to recent messages (could implement real-time updates)
+            loadRecentMessages();
+        }
+
+        function onMessageSent(data) {
+            showToast(`Message sent to ${data.contactId}`, 'success');
+        }
+
+        function updateSystemStatus(data) {
+            updateBotStatus(data.botPaused ? 'paused' : 'active');
+        }
+
+        function updateCharCount() {
+            const text = document.getElementById('message-text').value;
+            document.getElementById('char-count').textContent = text.length;
+        }
+
+        async function logout() {
+            try {
+                await fetchAPI('/api/auth/logout', 'POST');
+                window.location.href = '/login';
+            } catch (error) {
+                window.location.href = '/login';
+            }
+        }
+
+        // Utility functions
+        async function fetchAPI(url, method = 'GET', body = null) {
+            const options = { method, headers: {} };
+
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+
+            if (response.status === 401) {
+                window.location.href = '/login?expired=1';
+                throw new Error('Authentication required');
+            }
+
+            return await response.json();
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(refreshStats, 30000);
+    </script>
+</body>
+
+</html>

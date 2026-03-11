@@ -1,0 +1,13 @@
+pyautogen # ==0.2.18
+openai # ==1.12.0
+azure-identity # ==1.15.0
+python-dotenv # ==1.0.0
+asyncio-mqtt # ==0.16.1
+aiofiles # ==23.2.1
+psutil # ==5.9.6
+schedule # ==1.2.0
+langdetect # ==1.0.9
+# speech-recognition # ==3.10.0
+requests # ==2.31.0
+beautifulsoup4 # ==4.12.2
+cryptography # ==41.0.8
